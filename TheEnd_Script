@@ -1,0 +1,26 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class TheEnd : MonoBehaviour
+{
+    private int enemiesOnScene;
+
+    public static TheEnd Instance { get; set; }
+
+    private void Awake()
+    {
+        Instance = this;
+    }
+
+    public  void EnemiesCount()
+    {
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("enemy");
+        enemiesOnScene = enemies.Length;
+        Debug.Log(enemiesOnScene);
+
+        if (enemiesOnScene == 1)
+            Hero.Instance.Invoke("SetLosePanel", 1.1f);
+    }
+}
