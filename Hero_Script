@@ -1,0 +1,181 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class Hero : Entity
+{
+    // Прыжок и бег
+    [SerializeField] private float speed = 3f;
+    [SerializeField] private float JumpForce = 15f;
+    [SerializeField] public int health;
+
+    //Для сердечек
+    [SerializeField] private Image[] hearts;
+    [SerializeField] private Sprite aliveHeart;
+    [SerializeField] private Sprite deadHeart;
+
+    //Проверка на наличие земли под ногами
+    private bool isGrounded = false;
+
+    //Компоненты
+    private Rigidbody2D rb;
+    private SpriteRenderer sprite;
+    private Animator anim;
+
+    //Для атаки
+    public bool isAttacking = false;
+    public bool isRecharged = true;
+    public Transform attackPos;
+    public float attackRange;
+    public LayerMask enemy;
+
+    //Для управления
+    public Joystick joystick;
+
+    //Звуки
+    [SerializeField] private AudioSource jumpSound;
+    [SerializeField] private AudioSource damageSound;
+    [SerializeField] private AudioSource attackSound;
+
+    //Можем обращаться к методам класса Hero, не создавая объекта
+    public static Hero Instance { get; set; }
+
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        sprite = GetComponentInChildren<SpriteRenderer>();
+        anim = GetComponent<Animator>();
+        Instance = this;
+        isRecharged = true;
+        lives = 5;
+        health = lives;
+    }
+
+    private void Start()
+    {
+        lives = 5;
+    }
+
+    private void Update()
+    {
+        if (isGrounded && !isAttacking) State = States.Hero_Stay;
+        if (!isAttacking && joystick.Horizontal != 0)
+            Run();
+        if (!isAttacking && joystick.Vertical > 0.5f && isGrounded)
+            Jump();
+        
+
+        if (health > lives)
+            health = lives;
+        for (int i = 0; i < hearts.Length; i++)
+        {
+            if (i < health)
+                hearts[i].sprite = aliveHeart;
+            else
+                hearts[i].sprite = deadHeart;
+
+            if (i < lives)
+                hearts[i].enabled = true;
+            else
+                hearts[i].enabled = false;
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        CheckGround();
+    }
+
+    private void Run()
+    {
+        if (isGrounded && !isAttacking) State = States.Hero_Run;
+        Vector3 dir = transform.right * joystick.Horizontal;
+        transform.position = Vector3.MoveTowards(transform.position, transform.position + dir, speed * Time.deltaTime);
+        sprite.flipX = dir.x > 0f;
+    }
+
+    private void Jump()
+    {
+        rb.velocity = Vector2.up * JumpForce;
+        jumpSound.Play();
+    }
+
+    public void Attack()
+    {
+        if (isGrounded && isRecharged)
+        {
+            State = States.Hero_Attack;
+            isAttacking = true;
+            isRecharged = false;
+
+            StartCoroutine(AttackAnimation());
+            StartCoroutine(AttackCoolDown());
+        }
+    }
+
+    private void OnAttack()
+    {
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(attackPos.position, attackRange, enemy);
+
+        attackSound.Play();
+
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            colliders[i].GetComponent<Entity>().GetDamage();
+            StartCoroutine(EnemyOnAttack(colliders[i]));
+        }
+    }
+    public override void GetDamage()
+    {
+        health--;
+        if (health == 0)
+        {
+            foreach (var h in hearts)
+                h.sprite = deadHeart;
+            Die();
+        }
+        damageSound.Play();
+    }
+
+    private void CheckGround()
+    {
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, 0.3f);
+        isGrounded = colliders.Length > 1;
+        if (!isGrounded && !isAttacking) State = States.Hero_Jump;
+    }
+
+    private States State
+    {
+        get { return (States)anim.GetInteger("state"); }
+        set { anim.SetInteger("state", (int)value); }
+    }
+
+    private IEnumerator AttackAnimation()
+    {
+        yield return new WaitForSeconds(0.5f);
+        isAttacking = false;
+    }
+
+    private IEnumerator AttackCoolDown()
+    {
+        yield return new WaitForSeconds(0.5f);
+        isRecharged = true;
+    }
+
+    private IEnumerator EnemyOnAttack(Collider2D enemy)
+    {
+        SpriteRenderer enemyColor = enemy.GetComponentInChildren<SpriteRenderer>();
+        enemyColor.color = new Color(1f, 0.4375f, 0.4375f);
+        yield return new WaitForSeconds(0.2f);
+        enemyColor.color = new Color(1, 1, 1);
+    }
+}
+
+public enum States
+{
+    Hero_Stay,
+    Hero_Run, 
+    Hero_Jump,
+    Hero_Attack
+}
