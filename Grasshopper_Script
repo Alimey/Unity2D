@@ -1,0 +1,56 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Grasshopper : Entity
+{
+    [SerializeField] private float jumpForce = 2f;
+
+    private SpriteRenderer sprite;
+    private Rigidbody2D rb;
+
+    private Vector3 dir;
+
+    private bool isGrounded;
+
+    private void Awake()
+    {
+        sprite = GetComponentInChildren<SpriteRenderer>();
+        rb = GetComponent<Rigidbody2D>();
+    }
+
+    private void Start()
+    {
+        lives = 3;
+        dir = transform.up;
+    }
+
+    private void Jump()
+    {
+        rb.velocity = Vector3.up * jumpForce;
+    }
+
+    private void Update()
+    {
+        if(transform.position.y<=-1.4)
+            Jump();
+    }
+
+    private void CheckGround()
+    {
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, 0.3f);
+        isGrounded = colliders.Length > 1;
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject == Hero.Instance.gameObject)
+        {
+            Hero.Instance.GetDamage();
+            lives--;
+        }
+
+        if (lives < 1)
+            Die();
+    }
+}
