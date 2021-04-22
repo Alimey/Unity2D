@@ -15,7 +15,5 @@ public class Entity : MonoBehaviour
     public virtual void Die()
     {
         Destroy(this.gameObject);
-        TheEnd.Instance.EnemiesCount();
-        gameObject.tag = "enemy_dead";
     }
 }
