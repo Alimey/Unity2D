@@ -4,9 +4,14 @@ using UnityEngine;
 
 public class Destroy : MonoBehaviour
 {
+    public GameObject Lose;
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.GetComponent<Entity>())
+        {
             collision.gameObject.GetComponent<Entity>().Die();
+            Lose.SetActive(true);
+        }
+            
     }
 }
