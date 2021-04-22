@@ -1,0 +1,27 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Stone : MonoBehaviour
+{
+    public bool HasStone = false;
+    public GameObject Attack;
+
+    public static Stone Instance { get; set; }
+
+    private void Awake()
+    {
+        Instance = this;
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject == Hero.Instance.gameObject )
+            {
+                HasStone = true;
+                Destroy(gameObject);
+                Attack.SetActive(true);
+                }
+            }
+    }
+
