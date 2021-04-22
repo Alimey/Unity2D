@@ -22,6 +22,8 @@ public class Hero : Entity
     private Rigidbody2D rb;
     private SpriteRenderer sprite;
     private Animator anim;
+    public GameObject theEnd;
+    public GameObject Lose;
 
     //Для атаки
     public bool isAttacking = false;
@@ -29,6 +31,8 @@ public class Hero : Entity
     public Transform attackPos;
     public float attackRange;
     public LayerMask enemy;
+    [SerializeField] private Transform shootPosition;
+    [SerializeField] private GameObject bullet;
 
     //Для управления
     public Joystick joystick;
@@ -64,7 +68,7 @@ public class Hero : Entity
             Run();
         if (!isAttacking && joystick.Vertical > 0.5f && isGrounded)
             Jump();
-        
+
 
         if (health > lives)
             health = lives;
@@ -80,6 +84,12 @@ public class Hero : Entity
             else
                 hearts[i].enabled = false;
         }
+
+        if (TheEnd.Instance.EnemiesCount())
+        { theEnd.SetActive(true); speed = 0f; JumpForce = 0; State = States.Hero_Stay; }
+
+        if (Input.GetKeyDown(KeyCode.G) && isAttacking)
+            Instantiate(bullet, shootPosition.position, transform.rotation);
     }
 
     private void FixedUpdate()
@@ -92,7 +102,7 @@ public class Hero : Entity
         if (isGrounded && !isAttacking) State = States.Hero_Run;
         Vector3 dir = transform.right * joystick.Horizontal;
         transform.position = Vector3.MoveTowards(transform.position, transform.position + dir, speed * Time.deltaTime);
-        sprite.flipX = dir.x > 0f;
+        sprite.flipX = dir.x <= 0f;
     }
 
     private void Jump()
@@ -101,9 +111,15 @@ public class Hero : Entity
         jumpSound.Play();
     }
 
+    private void Climb()
+    {
+        Vector3 dir = transform.up * joystick.Vertical;
+        transform.position = Vector3.MoveTowards(transform.position, transform.position + dir, speed * Time.deltaTime);
+    }
+
     public void Attack()
     {
-        if (isGrounded && isRecharged)
+        if (isGrounded && isRecharged && Stone.Instance.HasStone)
         {
             State = States.Hero_Attack;
             isAttacking = true;
@@ -134,6 +150,8 @@ public class Hero : Entity
             foreach (var h in hearts)
                 h.sprite = deadHeart;
             Die();
+            Lose.SetActive(true);
+
         }
         damageSound.Play();
     }
