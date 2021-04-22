@@ -1,0 +1,53 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class CameraController : MonoBehaviour
+{
+    [SerializeField] private Transform player;
+    private Vector3 pos;
+    public float dumping = 1.5f;
+    public Vector2 offset = new Vector2(0.5f, 0.5f);
+    public bool IsLeft;
+    private int lastX;
+
+    private void Start()
+    {
+        offset = new Vector2(Mathf.Abs(offset.x), offset.y);
+        FindPlayer(IsLeft);
+    }
+
+    public void FindPlayer(bool playerIsLeft)
+    {
+        player = GameObject.FindGameObjectWithTag("Player").transform;
+        lastX = Mathf.RoundToInt(player.position.x);
+        if (playerIsLeft)
+            transform.position = new Vector3(player.position.x - offset.x, player.position.y + offset.y, transform.position.z);
+        else
+            transform.position = new Vector3(player.position.x + offset.x, player.position.y + offset.y, transform.position.z);
+    }
+
+    private void Update()
+    {
+        if (player)
+        {
+            int currentX = Mathf.RoundToInt(player.position.x);
+            if (currentX > lastX) IsLeft = false; else if (currentX < lastX) IsLeft = true;
+            lastX = Mathf.RoundToInt(player.position.x);
+
+            Vector3 target;
+            if (IsLeft)
+            {
+                target = new Vector3(player.position.x - offset.x, player.position.y + offset.y, transform.position.z);
+            }
+            else
+            {
+                target = new Vector3(player.position.x + offset.x, player.position.y + offset.y, transform.position.z);
+            }
+
+            Vector3 currentPosition = Vector3.Lerp(transform.position, target, dumping * Time.deltaTime);
+            transform.position = currentPosition;
+        }
+    }
+}
+
