@@ -4,19 +4,30 @@ using UnityEngine;
 
 public class Wood : Entity
 {
+    public GameObject SlingShot;
     private void Start()
     {
         lives = 3;
     }
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject == Hero.Instance.gameObject)
         {
             Hero.Instance.GetDamage();
             lives--;
-            Debug.Log("Wood's lives = " + lives);
             if (lives < 1)
+            {
                 Die();
+            }
+        }
+        else if(collision.gameObject.tag == "Bullet")
+        {
+            lives--;
+            if (lives < 1)
+            {
+                Die();
+            }
         }
     }
 }
