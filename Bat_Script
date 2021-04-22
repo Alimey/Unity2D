@@ -29,7 +29,7 @@ public class Bat : Entity
     private void Move()
     {
         Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position + transform.up * 0.1f + transform.right * dir.x * 0.7f, 0.1f);
-        if (colliders.Length > 0) dir *= -1f;
+        if (colliders.Length > 0 || transform.position.x > -3f || transform.position.x < -8.3f) dir *= -1f;
         sprite.flipX = dir.x > 0f;
         transform.position = Vector3.MoveTowards(transform.position, transform.position + dir, speed*Time.deltaTime);
     }
@@ -41,9 +41,15 @@ public class Bat : Entity
             Hero.Instance.GetDamage();
             lives--;
         }
-
+        else if (collision.gameObject.tag == "Bullet")
+        {
+            lives--;
+            
+        }
         if (lives < 1)
             Die();
     }
 
+
 }
+
